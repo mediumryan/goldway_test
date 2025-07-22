@@ -1,25 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Route, Routes } from 'react-router-dom';
+import styled from 'styled-components';
+import Home from './pages/Home';
+import Calendar from './pages/Calendar';
+import SelectWork from './pages/SelectWork';
+import Detail from './pages/Detail';
+
+const MainWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <MainWrapper>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="select-work" element={<SelectWork />} />
+        <Route path="calendar" element={<Calendar />} />
+        <Route path="detail/:title" element={<Detail />} />
+      </Routes>
+    </MainWrapper>
   );
 }
 

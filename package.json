@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -10,18 +14,27 @@
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.8",
+    "@types/react-big-calendar": "^1.16.2",
     "@types/react-dom": "^19.1.6",
+    "gh-pages": "^6.3.0",
+    "moment": "^2.30.1",
     "react": "^19.1.0",
+    "react-big-calendar": "^1.19.4",
     "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0",
     "react-scripts": "5.0.1",
+    "styled-components": "^6.1.19",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
+  "homepage": "https://mediumryan.github.io/goldway_test",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
