@@ -55,6 +55,7 @@ export default function Home() {
           <label>PW</label>
           <input type="password" name="pw" required />
         </div>
+        <p>로그인 버튼을 클릭시, 다음 화면으로 이동합니다.</p>
         <button
           type="submit"
           onClick={() => {
