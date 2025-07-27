@@ -49,7 +49,7 @@ interface AddEventModalProps {
 }
 
 // --- Component ---
-const AddEventModal: React.FC<AddEventModalProps> = ({
+const AddShipModal: React.FC<AddEventModalProps> = ({
   show,
   onClose,
   onSave,
@@ -74,10 +74,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   return (
     <ModalBackground>
       <ModalContent>
-        <h2>새 이벤트 추가</h2>
+        <h2>선박 추가</h2>
         <input
           type="text"
-          placeholder="이벤트 제목"
+          placeholder="GA1108"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -95,4 +95,4 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
 };
 
-export default AddEventModal;
+export default AddShipModal;

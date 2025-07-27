@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Calendar as BigCalendar,
@@ -8,8 +8,10 @@ import {
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import styled from 'styled-components';
-import initialEvents from '../utils/events';
-import AddEventModal from '../components/AddEventModal';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../utils/firebase';
+import AddShipModal from '../components/AddEventModal';
+// import AddShipModal from '../components/AddShipModal'; // Will be used later
 
 // --- Type Definitions ---
 interface MyEvent {
@@ -17,6 +19,8 @@ interface MyEvent {
   start: Date;
   end: Date;
   allDay?: boolean;
+  shipId: string; // Unique identifier for the ship
+  date: string; // Date in 'YYYY-MM-DD' format
 }
 
 // --- Styled Components ---
@@ -28,9 +32,9 @@ const CalendarWrapper = styled.div`
 `;
 
 const CalendarContainer = styled.div`
-  position: relative; /* Create a new stacking context */
-  z-index: 1; /* Ensure it's below the modal */
-  height: 90%; /* Maintain the height of the calendar */
+  position: relative;
+  z-index: 1;
+  height: 90%;
 `;
 
 const StyledToolbar = styled.div`
@@ -65,22 +69,64 @@ const localizer = momentLocalizer(moment);
 
 const MyCalendar = () => {
   const [date, setDate] = useState(new Date());
-  const [events, setEvents] = useState<MyEvent[]>(initialEvents);
+  const [events, setEvents] = useState<MyEvent[]>([]);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-  const handleSelectEvent = (event: MyEvent) => {
-    navigate(`/detail/${event.title}`);
+  const fetchEvents = useCallback(async (startDate: Date, endDate: Date) => {
+    const start = moment(startDate).format('YYYY-MM-DD');
+    const end = moment(endDate).format('YYYY-MM-DD');
+
+    try {
+      const q = query(
+        collection(db, 'daily_ships'),
+        where('__name__', '>=', start),
+        where('__name__', '<=', end)
+      );
+      const querySnapshot = await getDocs(q);
+      const newEvents: MyEvent[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const docId = doc.id;
+        const eventDate = moment(docId, 'YYYY-MM-DD').toDate();
+
+        if (data.shipIdentifiers && Array.isArray(data.shipIdentifiers)) {
+          data.shipIdentifiers.forEach((shipId: string) => {
+            newEvents.push({
+              title: shipId, // Display shipId on the calendar
+              shipId: shipId,
+              start: eventDate,
+              end: eventDate,
+              allDay: true,
+              date: docId,
+            });
+          });
+        }
+      });
+      setEvents(newEvents);
+    } catch (error) {
+      console.error('Error fetching events: ', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const startOfMonth = moment(date).startOf('month').toDate();
+    const endOfMonth = moment(date).endOf('month').toDate();
+    fetchEvents(startOfMonth, endOfMonth);
+  }, [date, fetchEvents]);
+
+  const handleNavigate = (newDate: Date) => {
+    setDate(newDate);
   };
 
-  const handleSaveEvent = (title: string, date: string) => {
-    const newEvent: MyEvent = {
-      title,
-      start: new Date(date),
-      end: new Date(date),
-      allDay: true,
-    };
-    setEvents([...events, newEvent]);
+  const handleSelectEvent = (event: MyEvent) => {
+    navigate(`/detail/${event.date}/${event.shipId}`);
+  };
+
+  // This function will be fully implemented in the next steps
+  const handleSaveShip = async (shipData: any) => {
+    console.log('Saving ship data:', shipData);
+    // Logic to save new ship to Firestore will be added here
     setShowModal(false);
   };
 
@@ -120,15 +166,15 @@ const MyCalendar = () => {
           endAccessor="end"
           style={{ height: '100%' }}
           date={date}
-          onNavigate={setDate}
+          onNavigate={handleNavigate}
           onSelectEvent={handleSelectEvent}
           components={{ toolbar: CustomToolbar }}
         />
       </CalendarContainer>
-      <AddEventModal
+      <AddShipModal
         show={showModal}
         onClose={() => setShowModal(false)}
-        onSave={handleSaveEvent}
+        onSave={handleSaveShip}
       />
     </CalendarWrapper>
   );

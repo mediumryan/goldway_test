@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import Home from './pages/Home';
 import Calendar from './pages/Calendar';
 import SelectWork from './pages/SelectWork';
-import Detail from './pages/Detail';
+import DetailPage from './pages/Detail'; // Renamed for clarity
 
 const MainWrapper = styled.div`
   display: flex;
@@ -18,7 +18,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="select-work" element={<SelectWork />} />
         <Route path="calendar" element={<Calendar />} />
-        <Route path="detail/:title" element={<Detail />} />
+        <Route path="/detail/:date/:shipId" element={<DetailPage />} />
       </Routes>
     </MainWrapper>
   );

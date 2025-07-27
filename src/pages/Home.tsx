@@ -5,13 +5,18 @@ const MainWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 50px;
 `;
 
-const LoginForm = styled.form`
+const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
   width: 300px;
   margin-top: 20px;
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 8px;
+
   div {
     margin-bottom: 10px;
     label {
@@ -42,29 +47,26 @@ export default function Home() {
   return (
     <MainWrapper>
       <h1>GOLDWAY JAPAN 混載貨物 管理 WEB ページ</h1>
-
       <h2>株式会社　宇徳用</h2>
 
       <h3>使用者ログイン</h3>
-      <LoginForm>
+      <StyledForm
+        onSubmit={(e) => {
+          e.preventDefault();
+          router('/select-work');
+        }}
+      >
         <div>
           <label>ID</label>
-          <input type="text" name="id" required />
+          <input type="text" name="id" />
         </div>
         <div>
           <label>PW</label>
-          <input type="password" name="pw" required />
+          <input type="password" name="pw" />
         </div>
         <p>로그인 버튼을 클릭시, 다음 화면으로 이동합니다.</p>
-        <button
-          type="submit"
-          onClick={() => {
-            router('/select-work');
-          }}
-        >
-          ログイン
-        </button>
-      </LoginForm>
+        <button type="submit">ログイン</button>
+      </StyledForm>
     </MainWrapper>
   );
 }
