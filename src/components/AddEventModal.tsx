@@ -67,7 +67,7 @@ const AddShipModal: React.FC<AddEventModalProps> = ({
       setTitle('');
       setDate('');
     } else {
-      alert('제목과 날짜를 모두 입력해주세요.');
+      alert('선박명과 날짜를 모두 입력해주세요.');
     }
   };
 
@@ -77,7 +77,7 @@ const AddShipModal: React.FC<AddEventModalProps> = ({
         <h2>선박 추가</h2>
         <input
           type="text"
-          placeholder="GA1108"
+          placeholder="선박명 (예: GA1108)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />

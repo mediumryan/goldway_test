@@ -1,6 +1,17 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { auth } from '../utils/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from 'firebase/auth';
 import styled from 'styled-components';
 
+// --- Types ---
+interface HomeProps {
+  onLoginSuccess: () => void;
+}
+
+// --- Styled Components ---
 const MainWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -41,8 +52,32 @@ const StyledForm = styled.form`
   }
 `;
 
-export default function Home() {
-  const router = useNavigate();
+export default function Home({ onLoginSuccess }: HomeProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      onLoginSuccess(); // Notify App.tsx that login was successful
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      onLoginSuccess(); // Also notify on registration success
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   return (
     <MainWrapper>
@@ -50,22 +85,38 @@ export default function Home() {
       <h2>株式会社　宇徳用</h2>
 
       <h3>使用者ログイン</h3>
-      <StyledForm
-        onSubmit={(e) => {
-          e.preventDefault();
-          router('/select-work');
-        }}
-      >
+      <StyledForm onSubmit={handleLogin}>
         <div>
-          <label>ID</label>
-          <input type="text" name="id" />
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
         <div>
-          <label>PW</label>
-          <input type="password" name="pw" />
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
-        <p>로그인 버튼을 클릭시, 다음 화면으로 이동합니다.</p>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">ログイン</button>
+        <button
+          type="button"
+          onClick={handleRegister}
+          style={{ marginTop: '10px', backgroundColor: '#28a745' }}
+        >
+          新規登録
+        </button>
       </StyledForm>
     </MainWrapper>
   );

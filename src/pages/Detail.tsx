@@ -15,7 +15,7 @@ import { ShipDetails, Item, Comment } from '../types';
 
 // --- Styled Components ---
 const DetailWrapper = styled.div`
-  padding: 20px;
+  padding: 10px;
   font-family: Arial, sans-serif;
 `;
 
@@ -39,8 +39,8 @@ const CommentWrapper = styled.div`
   line-height: 1.5;
   color: #333;
   overflow-y: auto;
+  min-width: 200px; // Ensure it has a minimum width
   max-height: 400px; // Set a max height for the comment section
-  min-width: 20vw; // Set min-width to 1/5 of the viewport width
 `;
 
 const ButtonContainer = styled.div`
@@ -83,7 +83,7 @@ const DetailPage = () => {
           ...(doc.data() as Omit<Item, 'id'>),
         }));
         setItems(itemsData);
-        setOriginalItems(itemsData);
+        setOriginalItems(JSON.parse(JSON.stringify(itemsData)));
 
         const commentsColRef = collection(shipDocRef, 'comments');
         const commentsQuerySnap = await getDocs(commentsColRef);
@@ -135,10 +135,15 @@ const DetailPage = () => {
   };
 
   const handleSelectAll = () => {
+    console.log('handleSelectAll called.');
+    console.log('Current selectedItemIds.length:', selectedItemIds.length);
+    console.log('Current items.length:', items.length);
     if (selectedItemIds.length === items.length) {
       setSelectedItemIds([]);
+      console.log('Deselecting all items.');
     } else {
       setSelectedItemIds(items.map((item) => item.id));
+      console.log('Selecting all items.');
     }
   };
 
@@ -200,7 +205,7 @@ const DetailPage = () => {
         ...(doc.data() as Omit<Item, 'id'>),
       }));
       setItems(itemsData);
-      setOriginalItems(itemsData);
+      setOriginalItems(JSON.parse(JSON.stringify(itemsData)));
       setItemsToDelete([]);
       alert('Changes saved successfully!');
     } catch (error) {
@@ -219,9 +224,9 @@ const DetailPage = () => {
         <TableAndCommentsWrapper>
           <DataTable
             items={items}
+            shipDetails={shipDetails}
             selectedItemIds={selectedItemIds}
             onItemChange={handleItemChange}
-            onAddItem={handleAddItem}
             onSelectionChange={handleSelectionChange}
             onSelectAll={handleSelectAll}
           />
@@ -241,16 +246,16 @@ const DetailPage = () => {
           </CommentWrapper>
         </TableAndCommentsWrapper>
         <ButtonContainer>
-          <Button onClick={handleAddItem}>Add New Item</Button>
+          <Button onClick={handleAddItem}>New</Button>
           <Button
             color="danger"
             onClick={handleDeleteSelected}
             disabled={selectedItemIds.length === 0}
           >
-            Delete Selected
+            Delete
           </Button>
           <Button onClick={handleSaveChanges} sx={{ ml: 'auto' }}>
-            Save Changes
+            Save
           </Button>
         </ButtonContainer>
       </DetailInnerWrapper>

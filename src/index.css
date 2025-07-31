@@ -1,0 +1,17 @@
+/* AG Grid Custom Styles */
+.ag-header-cell-right-border {
+  border-right: 1px solid #e0e0e0 !important;
+  font-size: 0.65rem !important;
+}
+
+.ag-header-cell-label,
+.ag-header-cell-right-border .ag-header-cell-label,
+.ag-header-cell-comp-wrapper {
+  justify-content: center !important;
+}
+
+.ag-header-third-row {
+  font-size: 0.65rem !important;
+  background-color: #ffdf2a !important; /* 어두운 노란색 계열 */
+  border-right: 1px solid #e0e0e0 !important; /* 테두리 다시 추가 */
+}

@@ -8,10 +8,20 @@ import {
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import styled from 'styled-components';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  setDoc,
+  updateDoc,
+  getDoc,
+  arrayUnion,
+} from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import AddShipModal from '../components/AddEventModal';
-// import AddShipModal from '../components/AddShipModal'; // Will be used later
+import { AppUser } from '../App'; // Import AppUser type
 
 // --- Type Definitions ---
 interface MyEvent {
@@ -21,6 +31,10 @@ interface MyEvent {
   allDay?: boolean;
   shipId: string; // Unique identifier for the ship
   date: string; // Date in 'YYYY-MM-DD' format
+}
+
+interface MyCalendarProps {
+  user: AppUser | null; // Prop to receive user info
 }
 
 // --- Styled Components ---
@@ -56,6 +70,12 @@ const StyledToolbar = styled.div`
     &:hover {
       background: #f5f5f5;
     }
+
+    &:disabled {
+      background: #f0f0f0;
+      color: #aaa;
+      cursor: not-allowed;
+    }
   }
 
   .rbc-toolbar-label {
@@ -67,7 +87,7 @@ const StyledToolbar = styled.div`
 // --- Main Component ---
 const localizer = momentLocalizer(moment);
 
-const MyCalendar = () => {
+const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -123,36 +143,73 @@ const MyCalendar = () => {
     navigate(`/detail/${event.date}/${event.shipId}`);
   };
 
-  // This function will be fully implemented in the next steps
-  const handleSaveShip = async (shipData: any) => {
-    console.log('Saving ship data:', shipData);
-    // Logic to save new ship to Firestore will be added here
-    setShowModal(false);
+  const handleSaveShip = async (title: string, date: string) => {
+    console.log('Saving ship data:', { title, date });
+    const dailyShipDocRef = doc(db, 'daily_ships', date);
+    const shipDocRef = doc(dailyShipDocRef, 'ships', title);
+
+    try {
+      // 1. Update shipIdentifiers array in the daily_ships document
+      const dailyShipDocSnap = await getDoc(dailyShipDocRef);
+
+      if (dailyShipDocSnap.exists()) {
+        await updateDoc(dailyShipDocRef, {
+          shipIdentifiers: arrayUnion(title),
+        });
+        console.log('Ship ID added to existing daily_ships document!');
+      } else {
+        await setDoc(dailyShipDocRef, {
+          shipIdentifiers: [title],
+        });
+        console.log('New daily_ships document created with Ship ID!');
+      }
+
+      // 2. Create/Update ship document in the 'ships' subcollection with an empty object
+      await setDoc(shipDocRef, {}, { merge: true });
+      console.log(`Ship ${title} details saved in subcollection!`);
+
+      // Refresh events after saving
+      const startOfMonth = moment(date).startOf('month').toDate();
+      const endOfMonth = moment(date).endOf('month').toDate();
+      fetchEvents(startOfMonth, endOfMonth);
+      setShowModal(false);
+    } catch (error) {
+      console.error('Error saving ship:', error);
+      // Optionally, show an error message to the user
+    }
   };
 
-  const CustomToolbar = (toolbar: ToolbarProps<MyEvent>) => (
-    <StyledToolbar>
-      <span className="rbc-btn-group">
-        <button type="button" onClick={() => toolbar.onNavigate('TODAY')}>
-          오늘
-        </button>
-        <button type="button" onClick={() => toolbar.onNavigate('PREV')}>
-          {'<'}
-        </button>
-        <button type="button" onClick={() => toolbar.onNavigate('NEXT')}>
-          {'>'}
-        </button>
-      </span>
-      <span className="rbc-toolbar-label">
-        {moment(toolbar.date).format('YYYY년 MM월')}
-      </span>
-      <span className="rbc-btn-group">
-        <button type="button" onClick={() => setShowModal(true)}>
-          +
-        </button>
-      </span>
-    </StyledToolbar>
-  );
+  const CustomToolbar = (toolbar: ToolbarProps<MyEvent>) => {
+    const canAddShip = user?.role === 'admin' || user?.role === 'operator';
+
+    return (
+      <StyledToolbar>
+        <span className="rbc-btn-group">
+          <button type="button" onClick={() => toolbar.onNavigate('TODAY')}>
+            오늘
+          </button>
+          <button type="button" onClick={() => toolbar.onNavigate('PREV')}>
+            {'<'}
+          </button>
+          <button type="button" onClick={() => toolbar.onNavigate('NEXT')}>
+            {' >'}
+          </button>
+        </span>
+        <span className="rbc-toolbar-label">
+          {moment(toolbar.date).format('YYYY년 MM월')}
+        </span>
+        <span className="rbc-btn-group">
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            disabled={!canAddShip}
+          >
+            +
+          </button>
+        </span>
+      </StyledToolbar>
+    );
+  };
 
   return (
     <CalendarWrapper>
