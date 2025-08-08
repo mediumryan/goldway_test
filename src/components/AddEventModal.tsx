@@ -67,17 +67,17 @@ const AddShipModal: React.FC<AddEventModalProps> = ({
       setTitle('');
       setDate('');
     } else {
-      alert('선박명과 날짜를 모두 입력해주세요.');
+      alert('船舶名と日付を全て入力してください。');
     }
   };
 
   return (
     <ModalBackground>
       <ModalContent>
-        <h2>선박 추가</h2>
+        <h2>船舶 追加</h2>
         <input
           type="text"
-          placeholder="선박명 (예: GA1108)"
+          placeholder="船舶名 (ex: GA1108)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -87,8 +87,8 @@ const AddShipModal: React.FC<AddEventModalProps> = ({
           onChange={(e) => setDate(e.target.value)}
         />
         <div className="buttons">
-          <button onClick={onClose}>취소</button>
-          <button onClick={handleSave}>저장</button>
+          <button onClick={onClose}>戻る</button>
+          <button onClick={handleSave}>追加</button>
         </div>
       </ModalContent>
     </ModalBackground>

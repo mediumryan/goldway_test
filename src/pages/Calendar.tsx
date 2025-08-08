@@ -6,6 +6,7 @@ import {
   ToolbarProps,
 } from 'react-big-calendar';
 import moment from 'moment';
+import 'moment/locale/ja';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import styled from 'styled-components';
 import {
@@ -84,9 +85,10 @@ const StyledToolbar = styled.div`
   }
 `;
 
-// --- Main Component ---
+moment.locale('ja'); // Set locale to Japanese
 const localizer = momentLocalizer(moment);
 
+// --- Main Component ---
 const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState<MyEvent[]>([]);
@@ -186,7 +188,7 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
       <StyledToolbar>
         <span className="rbc-btn-group">
           <button type="button" onClick={() => toolbar.onNavigate('TODAY')}>
-            오늘
+            今日
           </button>
           <button type="button" onClick={() => toolbar.onNavigate('PREV')}>
             {'<'}
@@ -196,7 +198,7 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
           </button>
         </span>
         <span className="rbc-toolbar-label">
-          {moment(toolbar.date).format('YYYY년 MM월')}
+          {moment(toolbar.date).format('YYYY年 MM月')}
         </span>
         <span className="rbc-btn-group">
           <button
