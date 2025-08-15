@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/goldway_test/static/css/main.3d6c1327.css",
-    "main.js": "/goldway_test/static/js/main.2c32fec5.js",
+    "main.js": "/goldway_test/static/js/main.18f9e579.js",
     "index.html": "/goldway_test/index.html",
     "main.3d6c1327.css.map": "/goldway_test/static/css/main.3d6c1327.css.map",
-    "main.2c32fec5.js.map": "/goldway_test/static/js/main.2c32fec5.js.map"
+    "main.18f9e579.js.map": "/goldway_test/static/js/main.18f9e579.js.map"
   },
   "entrypoints": [
     "static/css/main.3d6c1327.css",
-    "static/js/main.2c32fec5.js"
+    "static/js/main.18f9e579.js"
   ]
 }
