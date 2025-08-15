@@ -53,6 +53,8 @@ function App() {
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          console.log('userData:', userData);
+
           appUser = {
             ...currentUser,
             name: userData.name,
@@ -172,6 +174,7 @@ function App() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onSignOut={handleLogout}
+        user={user} // Pass the user prop
       />
     </Box>
   );

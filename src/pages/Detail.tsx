@@ -8,6 +8,7 @@ import {
   writeBatch,
   query,
   orderBy,
+  addDoc,
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import DataTable from '../components/Table';
@@ -30,6 +31,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ user }) => {
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [originalComments, setOriginalComments] = useState<Comment[]>([]);
+  const [newCommentInput, setNewCommentInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -223,6 +225,48 @@ const DetailPage: React.FC<DetailPageProps> = ({ user }) => {
     }
   };
 
+  const handleSaveComment = async (newCommentText: string) => {
+    if (!date || !shipId || !user) return;
+
+    console.log('User object in handleSaveComment:', user); // Add this line
+
+    const newComment: Comment = {
+      id: `new-${Date.now()}`, // Temporary ID, Firebase will assign a real one
+      user: user.company || 'Unknown User',
+      comment: newCommentText,
+      createdAt: new Date(),
+    };
+
+    try {
+      const commentsColRef = collection(
+        db,
+        `daily_ships/${date}/ships/${shipId}/comments`
+      );
+      const docRef = await addDoc(commentsColRef, {
+        user: newComment.user,
+        comment: newComment.comment,
+        createdAt: newComment.createdAt,
+      });
+      // Update local state with the actual ID from Firebase
+      setComments((prevComments) => [
+        ...prevComments,
+        { ...newComment, id: docRef.id },
+      ]);
+      setDialogInfo({
+        title: 'Success',
+        content: 'Comment added successfully!',
+      });
+      setDialogOpen(true);
+    } catch (error) {
+      console.error('Error adding comment: ', error);
+      setDialogInfo({
+        title: 'Error',
+        content: 'Failed to add comment.',
+      });
+      setDialogOpen(true);
+    }
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -274,24 +318,15 @@ const DetailPage: React.FC<DetailPageProps> = ({ user }) => {
                   </Box>
                 ))
               ) : (
-                <Typography level="body-sm">No comments available.</Typography>
+                <Typography level="body-sm">コメントがありません。</Typography>
               )}
             </Sheet>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                const newCommentText = e.currentTarget.comment.value;
-                if (newCommentText.trim() === '') return;
-
-                const newComment: Comment = {
-                  id: `new-${Date.now()}`,
-                  user: user?.company || 'Unknown User',
-                  comment: newCommentText,
-                  createdAt: new Date(),
-                };
-
-                setComments([...comments, newComment]);
-                e.currentTarget.comment.value = '';
+                if (newCommentInput.trim() === '') return;
+                await handleSaveComment(newCommentInput);
+                setNewCommentInput('');
               }}
             >
               <FormControl sx={{ mt: 1.5 }}>
@@ -299,9 +334,11 @@ const DetailPage: React.FC<DetailPageProps> = ({ user }) => {
                   name="comment"
                   placeholder="Add a comment..."
                   sx={{ mb: 1 }}
+                  value={newCommentInput}
+                  onChange={(e) => setNewCommentInput(e.target.value)}
                 />
                 <Button type="submit" sx={{ alignSelf: 'flex-end' }}>
-                  Add Comment
+                  コメントを追加
                 </Button>
               </FormControl>
             </form>
@@ -319,17 +356,17 @@ const DetailPage: React.FC<DetailPageProps> = ({ user }) => {
               zIndex: 1,
             }}
           >
-            <Box>
-              <Button onClick={handleAddItem}>New</Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button onClick={handleAddItem}>追加</Button>
               <Button
                 color="danger"
                 onClick={handleDeleteSelected}
                 disabled={selectedItemIds.length === 0}
               >
-                Delete
+                削除
               </Button>
             </Box>
-            <Button onClick={handleSaveChanges}>Save</Button>
+            <Button onClick={handleSaveChanges}>保存</Button>
           </Box>
         )}
       </Box>
