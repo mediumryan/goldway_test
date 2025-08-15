@@ -21,7 +21,7 @@ import {
   arrayUnion,
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import AddShipModal from '../components/AddEventModal';
+import AddShipModal, { ShipData } from '../components/AddEventModal';
 import { AppUser } from '../App'; // Import AppUser type
 
 // --- Type Definitions ---
@@ -41,7 +41,7 @@ interface MyCalendarProps {
 // --- Styled Components ---
 const CalendarWrapper = styled.div`
   width: 100%;
-  height: 85vh;
+  height: 85vh; /* Adjust height to fill remaining space */
   padding: 20px;
   box-sizing: border-box;
 `;
@@ -145,8 +145,8 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
     navigate(`/detail/${event.date}/${event.shipId}`);
   };
 
-  const handleSaveShip = async (title: string, date: string) => {
-    console.log('Saving ship data:', { title, date });
+  const handleSaveShip = async (data: ShipData) => {
+    const { title, date, carrierLine, voy, etd, eta } = data;
     const dailyShipDocRef = doc(db, 'daily_ships', date);
     const shipDocRef = doc(dailyShipDocRef, 'ships', title);
 
@@ -158,17 +158,23 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
         await updateDoc(dailyShipDocRef, {
           shipIdentifiers: arrayUnion(title),
         });
-        console.log('Ship ID added to existing daily_ships document!');
       } else {
         await setDoc(dailyShipDocRef, {
           shipIdentifiers: [title],
         });
-        console.log('New daily_ships document created with Ship ID!');
       }
 
-      // 2. Create/Update ship document in the 'ships' subcollection with an empty object
-      await setDoc(shipDocRef, {}, { merge: true });
-      console.log(`Ship ${title} details saved in subcollection!`);
+      // 2. Create/Update ship document in the 'ships' subcollection
+      const shipDataForDb = {
+        CARRIER_LINE: carrierLine,
+        VOY: voy,
+        ETD: etd,
+        ETA: eta,
+        KGS: '',
+        CBM: '',
+        TOTAL_PKG: '',
+      };
+      await setDoc(shipDocRef, shipDataForDb, { merge: true });
 
       // Refresh events after saving
       const startOfMonth = moment(date).startOf('month').toDate();
@@ -177,7 +183,6 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ user }) => {
       setShowModal(false);
     } catch (error) {
       console.error('Error saving ship:', error);
-      // Optionally, show an error message to the user
     }
   };
 

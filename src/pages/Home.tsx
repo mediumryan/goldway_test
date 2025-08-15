@@ -4,53 +4,19 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
-import styled from 'styled-components';
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Typography,
+} from '@mui/joy';
 
 // --- Types ---
 interface HomeProps {
   onLoginSuccess: () => void;
 }
-
-// --- Styled Components ---
-const MainWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-bottom: 50px;
-`;
-
-const StyledForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  width: 300px;
-  margin-top: 20px;
-  border: 1px solid #ddd;
-  padding: 20px;
-  border-radius: 8px;
-
-  div {
-    margin-bottom: 10px;
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-    }
-  }
-  button {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    &:hover {
-      background-color: #0056b3;
-    }
-  }
-`;
 
 export default function Home({ onLoginSuccess }: HomeProps) {
   const [email, setEmail] = useState('');
@@ -80,44 +46,70 @@ export default function Home({ onLoginSuccess }: HomeProps) {
   };
 
   return (
-    <MainWrapper>
-      <h1>GOLDWAY JAPAN 混載貨物 管理 WEB ページ</h1>
-      <h2>株式会社　宇徳用</h2>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        height: 'calc(100vh - 72px)',
+      }}
+    >
+      <Typography level="h1" sx={{ mt: 10 }}>
+        GOLDWAY JAPAN 混載貨物管理 WEBページ
+      </Typography>
+      <Typography level="h2">株式会社　OO様用</Typography>
 
-      <h3>使用者ログイン</h3>
-      <StyledForm onSubmit={handleLogin}>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
+      <Typography level="h3" sx={{ mt: 5 }}>
+        使用者ログイン
+      </Typography>
+      <Box
+        component="form"
+        onSubmit={handleLogin}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: 300,
+          mt: 2,
+          border: '1px solid #ddd',
+          p: 2.5,
+          borderRadius: 'md',
+        }}
+      >
+        <FormControl sx={{ mb: 1.5 }}>
+          <FormLabel>Email</FormLabel>
+          <Input
             type="email"
-            id="email"
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
+        </FormControl>
+        <FormControl sx={{ mb: 1.5 }}>
+          <FormLabel>Password</FormLabel>
+          <Input
             type="password"
-            id="password"
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit">ログイン</button>
-        <button
+        </FormControl>
+        {error && (
+          <Typography color="danger" level="body-sm" sx={{ mb: 1.5 }}>
+            {error}
+          </Typography>
+        )}
+        <Button type="submit">ログイン</Button>
+        <Button
           type="button"
           onClick={handleRegister}
-          style={{ marginTop: '10px', backgroundColor: '#28a745' }}
+          color="success"
+          sx={{ mt: 1.5 }}
         >
           新規登録
-        </button>
-      </StyledForm>
-    </MainWrapper>
+        </Button>
+      </Box>
+    </Box>
   );
 }

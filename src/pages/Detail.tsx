@@ -6,52 +6,22 @@ import {
   collection,
   getDocs,
   writeBatch,
+  query,
+  orderBy,
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import styled from 'styled-components';
-import Button from '@mui/joy/Button';
 import DataTable from '../components/Table';
 import { ShipDetails, Item, Comment } from '../types';
+import { AppUser } from '../App';
+import { Box, Button, FormControl, Input, Sheet, Typography } from '@mui/joy';
+import AlertDialog from '../components/AlertDialog';
 
-// --- Styled Components ---
-const DetailWrapper = styled.div`
-  padding: 10px;
-  font-family: Arial, sans-serif;
-`;
-
-const DetailInnerWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const TableAndCommentsWrapper = styled.div`
-  display: flex;
-`;
-
-const CommentWrapper = styled.div`
-  flex: 1;
-  margin-left: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  font-size: 0.875rem; // 14px
-  line-height: 1.5;
-  color: #333;
-  overflow-y: auto;
-  min-width: 200px; // Ensure it has a minimum width
-  max-height: 400px; // Set a max height for the comment section
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  width: 100%;
-`;
+interface DetailPageProps {
+  user: AppUser | null;
+}
 
 // --- Main Component ---
-const DetailPage = () => {
+const DetailPage: React.FC<DetailPageProps> = ({ user }) => {
   const { date, shipId } = useParams<{ date: string; shipId: string }>();
   const [shipDetails, setShipDetails] = useState<ShipDetails | null>(null);
   const [originalItems, setOriginalItems] = useState<Item[]>([]);
@@ -59,8 +29,12 @@ const DetailPage = () => {
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [originalComments, setOriginalComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogInfo, setDialogInfo] = useState({ title: '', content: '' });
 
   useEffect(() => {
     if (!date || !shipId) return;
@@ -86,12 +60,17 @@ const DetailPage = () => {
         setOriginalItems(JSON.parse(JSON.stringify(itemsData)));
 
         const commentsColRef = collection(shipDocRef, 'comments');
-        const commentsQuerySnap = await getDocs(commentsColRef);
+        const commentsQuery = query(
+          commentsColRef,
+          orderBy('createdAt', 'asc')
+        );
+        const commentsQuerySnap = await getDocs(commentsQuery);
         const commentsData = commentsQuerySnap.docs.map((doc) => ({
           id: doc.id,
           ...(doc.data() as Omit<Comment, 'id'>),
         }));
         setComments(commentsData);
+        setOriginalComments(JSON.parse(JSON.stringify(commentsData)));
       } catch (err: any) {
         setError(err.message);
         console.error('Error fetching document: ', err);
@@ -135,15 +114,10 @@ const DetailPage = () => {
   };
 
   const handleSelectAll = () => {
-    console.log('handleSelectAll called.');
-    console.log('Current selectedItemIds.length:', selectedItemIds.length);
-    console.log('Current items.length:', items.length);
     if (selectedItemIds.length === items.length) {
       setSelectedItemIds([]);
-      console.log('Deselecting all items.');
     } else {
       setSelectedItemIds(items.map((item) => item.id));
-      console.log('Selecting all items.');
     }
   };
 
@@ -194,6 +168,22 @@ const DetailPage = () => {
       }
     });
 
+    // Add new comments
+    comments.forEach((comment) => {
+      if (comment.id.startsWith('new-')) {
+        const newCommentRef = doc(
+          collection(db, `daily_ships/${date}/ships/${shipId}/comments`)
+        );
+        const commentData = {
+          user: comment.user,
+          comment: comment.comment,
+          id: newCommentRef.id, // Assign the new document ID to the id field
+          createdAt: comment.createdAt,
+        };
+        batch.set(newCommentRef, commentData);
+      }
+    });
+
     try {
       await batch.commit();
       // Refetch data after saving
@@ -207,10 +197,29 @@ const DetailPage = () => {
       setItems(itemsData);
       setOriginalItems(JSON.parse(JSON.stringify(itemsData)));
       setItemsToDelete([]);
-      alert('Changes saved successfully!');
+
+      const commentsColRef = collection(shipDocRef, 'comments');
+      const commentsQuery = query(commentsColRef, orderBy('createdAt', 'asc'));
+      const commentsQuerySnap = await getDocs(commentsQuery);
+      const commentsData = commentsQuerySnap.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Comment, 'id'>),
+      }));
+      setComments(commentsData);
+      setOriginalComments(JSON.parse(JSON.stringify(commentsData)));
+
+      setDialogInfo({
+        title: 'Success',
+        content: 'Changes saved successfully!',
+      });
+      setDialogOpen(true);
     } catch (error) {
       console.error('Error saving changes: ', error);
-      alert('Failed to save changes.');
+      setDialogInfo({
+        title: 'Error',
+        content: 'Failed to save changes.',
+      });
+      setDialogOpen(true);
     }
   };
 
@@ -218,10 +227,18 @@ const DetailPage = () => {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <DetailWrapper>
-      <h3>{shipId}</h3>
-      <DetailInnerWrapper>
-        <TableAndCommentsWrapper>
+    <Box sx={{ p: 1.5 }}>
+      <AlertDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title={dialogInfo.title}
+        content={dialogInfo.content}
+      />
+      {/* 선박명 */}
+      <Typography level="h3">{shipId}</Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', mt: 2 }}>
+          {/* 테이블 */}
           <DataTable
             items={items}
             shipDetails={shipDetails}
@@ -230,36 +247,93 @@ const DetailPage = () => {
             onSelectionChange={handleSelectionChange}
             onSelectAll={handleSelectAll}
           />
-          <CommentWrapper>
-            <h2>備考欄</h2>
-            {comments.length > 0 ? (
-              comments.map((comment) => (
-                <div key={comment.id}>
-                  <p>
-                    <strong>{comment.user}:</strong> {comment.comment}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p>No comments available.</p>
-            )}
-          </CommentWrapper>
-        </TableAndCommentsWrapper>
-        <ButtonContainer>
-          <Button onClick={handleAddItem}>New</Button>
-          <Button
-            color="danger"
-            onClick={handleDeleteSelected}
-            disabled={selectedItemIds.length === 0}
+          <Box
+            sx={{ display: 'flex', flexDirection: 'column', flex: 1, ml: 2 }}
           >
-            Delete
-          </Button>
-          <Button onClick={handleSaveChanges} sx={{ ml: 'auto' }}>
-            Save
-          </Button>
-        </ButtonContainer>
-      </DetailInnerWrapper>
-    </DetailWrapper>
+            <Typography level="h4" sx={{ alignSelf: 'center', mb: 1 }}>
+              備考欄
+            </Typography>
+            <Sheet
+              variant="outlined"
+              sx={{
+                flex: 1,
+                p: 1.5,
+                borderRadius: 'sm',
+                overflowY: 'auto',
+                minWidth: 200,
+                minHeight: 380,
+                maxHeight: 380,
+              }}
+            >
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <Box key={comment.id} sx={{ mt: 1 }}>
+                    <Typography level="body-sm">
+                      <strong>{comment.user}:</strong> {comment.comment}
+                    </Typography>
+                  </Box>
+                ))
+              ) : (
+                <Typography level="body-sm">No comments available.</Typography>
+              )}
+            </Sheet>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const newCommentText = e.currentTarget.comment.value;
+                if (newCommentText.trim() === '') return;
+
+                const newComment: Comment = {
+                  id: `new-${Date.now()}`,
+                  user: user?.company || 'Unknown User',
+                  comment: newCommentText,
+                  createdAt: new Date(),
+                };
+
+                setComments([...comments, newComment]);
+                e.currentTarget.comment.value = '';
+              }}
+            >
+              <FormControl sx={{ mt: 1.5 }}>
+                <Input
+                  name="comment"
+                  placeholder="Add a comment..."
+                  sx={{ mb: 1 }}
+                />
+                <Button type="submit" sx={{ alignSelf: 'flex-end' }}>
+                  Add Comment
+                </Button>
+              </FormControl>
+            </form>
+          </Box>
+        </Box>
+        {(user?.role === 'admin' || user?.role === 'operator') && (
+          <Box
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '96.5%',
+              gap: 1,
+              zIndex: 1,
+            }}
+          >
+            <Box>
+              <Button onClick={handleAddItem}>New</Button>
+              <Button
+                color="danger"
+                onClick={handleDeleteSelected}
+                disabled={selectedItemIds.length === 0}
+              >
+                Delete
+              </Button>
+            </Box>
+            <Button onClick={handleSaveChanges}>Save</Button>
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
 };
 

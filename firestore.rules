@@ -10,8 +10,18 @@ service cloud.firestore {
 
     // Users collection rules
     match /users/{userId} {
-      // Users can read and update their own profile information.
-      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Users can read their own profile information.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // An update is allowed if:
+      // 1. A user is updating their own info, BUT NOT their role.
+      // 2. The user is a 'master-admin' (who can change anything).
+      allow update: if request.auth != null &&
+                       (
+                         (request.auth.uid == userId && request.resource.data.role == resource.data.role) ||
+                         (getUserRole(request.auth.uid) == 'master-admin')
+                       );
+
       // Disallow users from creating their own profile to prevent role manipulation.
       // Creation should be handled by a trusted backend (e.g., Cloud Function).
       allow create: if false;

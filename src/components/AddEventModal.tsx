@@ -1,51 +1,31 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-
-// --- Styled Components ---
-const ModalBackground = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000; /* Ensure modal is on top */
-`;
-
-const ModalContent = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 9999;
-  h2 {
-    margin: 0;
-  }
-
-  input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-`;
+import {
+  Modal,
+  ModalDialog,
+  DialogTitle,
+  DialogContent,
+  Input,
+  Button,
+  Box,
+  FormControl,
+  Stack,
+  FormLabel,
+} from '@mui/joy';
 
 // --- Component Props ---
+export interface ShipData {
+  title: string;
+  date: string;
+  carrierLine: string;
+  voy: string;
+  etd: string;
+  eta: string;
+}
+
 interface AddEventModalProps {
   show: boolean;
   onClose: () => void;
-  onSave: (title: string, date: string) => void;
+  onSave: (data: ShipData) => void;
 }
 
 // --- Component ---
@@ -56,42 +36,107 @@ const AddShipModal: React.FC<AddEventModalProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
+  const [carrierLine, setCarrierLine] = useState('');
+  const [voy, setVoy] = useState('');
+  const [etd, setEtd] = useState('');
+  const [eta, setEta] = useState('');
+  const [error, setError] = useState('');
 
-  if (!show) {
-    return null;
-  }
+  const clearForm = () => {
+    setTitle('');
+    setDate('');
+    setCarrierLine('');
+    setVoy('');
+    setEtd('');
+    setEta('');
+    setError('');
+  };
 
   const handleSave = () => {
-    if (title && date) {
-      onSave(title, date);
-      setTitle('');
-      setDate('');
+    if (title && date && carrierLine && voy && etd && eta) {
+      onSave({ title, date, carrierLine, voy, etd, eta });
+      clearForm();
+      onClose();
     } else {
-      alert('船舶名と日付を全て入力してください。');
+      setError('全ての項目を入力してください。');
     }
   };
 
+  const handleClose = () => {
+    clearForm();
+    onClose();
+  };
+
   return (
-    <ModalBackground>
-      <ModalContent>
-        <h2>船舶 追加</h2>
-        <input
-          type="text"
-          placeholder="船舶名 (ex: GA1108)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <div className="buttons">
-          <button onClick={onClose}>戻る</button>
-          <button onClick={handleSave}>追加</button>
-        </div>
-      </ModalContent>
-    </ModalBackground>
+    <Modal open={show} onClose={handleClose}>
+      <ModalDialog>
+        <DialogTitle>船舶 追加</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            <FormControl>
+              <FormLabel>船舶名</FormLabel>
+              <Input
+                autoFocus
+                placeholder="船舶名 (ex: GA1108)"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>日付</FormLabel>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>CARRIER LINE</FormLabel>
+              <Input
+                value={carrierLine}
+                onChange={(e) => setCarrierLine(e.target.value)}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>VSL/VOY NO</FormLabel>
+              <Input
+                value={voy}
+                onChange={(e) => setVoy(e.target.value)}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>ETD</FormLabel>
+              <Input
+                type="date"
+                value={etd}
+                onChange={(e) => setEtd(e.target.value)}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>ETA</FormLabel>
+              <Input
+                type="date"
+                value={eta}
+                onChange={(e) => setEta(e.target.value)}
+              />
+            </FormControl>
+            {error && (
+              <Box sx={{ color: 'danger.500', fontSize: 'sm', mt: 1 }}>
+                {error}
+              </Box>
+            )}
+          </Stack>
+        </DialogContent>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 2 }}>
+          <Button variant="plain" color="neutral" onClick={handleClose}>
+            戻る
+          </Button>
+          <Button variant="solid" color="primary" onClick={handleSave}>
+            追加
+          </Button>
+        </Box>
+      </ModalDialog>
+    </Modal>
   );
 };
 

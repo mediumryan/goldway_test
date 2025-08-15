@@ -36,7 +36,7 @@ export default function DataTable({
     return {
       flex: 1,
       minWidth: 30,
-      editable: true,
+      editable: (params) => !params.node.isRowPinned(),
       resizable: true,
       cellStyle: {
         textAlign: 'center',
@@ -69,20 +69,29 @@ export default function DataTable({
             />
           );
         },
-        headerComponent: (params: any) => {
-          const isAllSelected =
+        headerComponent: () => {
+          const allSelected =
             items.length > 0 && selectedItemIds.length === items.length;
-          console.log(
-            'Table Header Checkbox Render - isAllSelected:',
-            isAllSelected
-          );
+          const someSelected =
+            selectedItemIds.length > 0 && selectedItemIds.length < items.length;
+
           return (
-            <Checkbox
-              checked={selectedItemIds.some((id) => id !== '')}
-              onChange={() => {
-                onSelectAll();
+            <div
+              onClick={onSelectAll}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-            />
+            >
+              <Checkbox
+                readOnly
+                checked={allSelected}
+                indeterminate={someSelected}
+              />
+            </div>
           );
         },
       },
@@ -139,12 +148,12 @@ export default function DataTable({
         ],
       },
       {
-        headerName: shipDetails?.VOY,
+        headerName: 'VSL/VOY NO',
         marryChildren: true,
         headerClass: 'ag-header-cell-right-border',
         children: [
           {
-            headerName: 'NEW CAMELLIA 3211N',
+            headerName: shipDetails?.VOY,
             marryChildren: true,
             headerClass: 'ag-header-cell-right-border',
             children: [
@@ -168,19 +177,19 @@ export default function DataTable({
         ],
       },
       {
-        headerName: shipDetails?.ETD,
+        headerName: 'ETD',
         marryChildren: true,
         headerClass: 'ag-header-cell-right-border',
         children: [
           {
-            headerName: '7/30',
+            headerName: shipDetails?.ETD,
             marryChildren: true,
             headerClass: 'ag-header-cell-right-border',
             children: [
               {
                 headerName: 'PIC',
                 field: 'PIC',
-                minWidth: 60,
+                minWidth: 85,
                 headerClass: 'ag-header-third-row',
               },
             ],
@@ -188,12 +197,12 @@ export default function DataTable({
         ],
       },
       {
-        headerName: shipDetails?.ETA,
+        headerName: 'ETA',
         marryChildren: true,
         headerClass: 'ag-header-cell-right-border',
         children: [
           {
-            headerName: '7/30',
+            headerName: shipDetails?.ETA,
             marryChildren: true,
             headerClass: 'ag-header-cell-right-border',
             children: [
@@ -423,7 +432,6 @@ export default function DataTable({
         defaultColDef={defaultColDef}
         onCellValueChanged={onCellValueChanged}
         rowSelection={'multiple'}
-        suppressRowClickSelection={true}
         pinnedBottomRowData={totals}
       />
     </div>

@@ -1,50 +1,43 @@
-import { Link } from 'react-router-dom';
-import styled from 'styled-components';
-
-const SelectWorkWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  font-size: 2rem;
-`;
-
-const WorkBox = styled.div`
-  width: 300px;
-  padding: 20px;
-  h4 {
-    margin-bottom: 10px;
-    text-align: left;
-  }
-  div {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    a {
-      text-decoration: none;
-      color: #007bff;
-      border: 1px solid #007bff;
-      padding: 10px;
-      transition: background-color 0.3s, color 0.3s;
-      &:hover {
-        background-color: #007bff;
-        color: white;
-      }
-    }
-  }
-`;
+import { Link as RouterLink } from 'react-router-dom';
+import { Box, Link, Typography } from '@mui/joy';
 
 export default function SelectWork() {
   return (
-    <SelectWorkWrapper>
-      <WorkBox>
-        <h4>業務</h4>
-        <div>
-          <Link to="/calendar">輸出 EXPORT</Link>
-          <Link to="/calendar">輸入 IMPORT</Link>
-        </div>
-      </WorkBox>
-    </SelectWorkWrapper>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        fontWeight: 'bold',
+        mt: 24,
+      }}
+    >
+      <Box sx={{ width: 300, p: 2.5 }}>
+        <Typography level="h4" sx={{ mb: 1.5, textAlign: 'left' }}>
+          業務
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Link
+            component={RouterLink}
+            to="/calendar"
+            variant="outlined"
+            sx={{ p: 1.5, textAlign: 'center' }}
+          >
+            輸出 EXPORT
+          </Link>
+          <Link
+            disabled={true}
+            component={RouterLink}
+            to="/calendar"
+            variant="outlined"
+            sx={{ p: 1.5, textAlign: 'center' }}
+          >
+            輸入 IMPORT
+          </Link>
+        </Box>
+      </Box>
+    </Box>
   );
 }

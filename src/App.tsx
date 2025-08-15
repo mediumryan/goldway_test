@@ -3,42 +3,22 @@ import { Route, Routes, useNavigate, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './utils/firebase';
-import styled from 'styled-components';
 import Home from './pages/Home';
 import Calendar from './pages/Calendar';
 import SelectWork from './pages/SelectWork';
 import DetailPage from './pages/Detail';
 import WelcomeDialog from './components/WelcomeDialog';
+import { Box, Button } from '@mui/joy';
+import IconButton from '@mui/joy/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import NavigationDrawer from './components/NavigationDrawer';
 
 // --- Types ---
 export interface AppUser extends User {
   name?: string;
   role?: string;
+  company?: string;
 }
-
-// --- Styled Components ---
-const MainWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const LogoutButton = styled.button`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 8px 16px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: 1000;
-
-  &:hover {
-    background-color: #c82333;
-  }
-`;
 
 // --- Components ---
 interface ProtectedRouteProps {
@@ -62,6 +42,7 @@ function App() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -76,6 +57,7 @@ function App() {
             ...currentUser,
             name: userData.name,
             role: userData.role,
+            company: userData.company,
           };
         } else {
           appUser = currentUser;
@@ -107,8 +89,43 @@ function App() {
   }
 
   return (
-    <MainWrapper>
-      {user && <LogoutButton onClick={handleLogout}>Sign out</LogoutButton>}
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        minHeight: '100vh',
+      }}
+    >
+      {user && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            p: 2,
+            zIndex: 1000,
+          }}
+        >
+          <IconButton
+            variant="outlined"
+            color="neutral"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Button color="danger" onClick={handleLogout}>
+            Sign out
+          </Button>
+        </Box>
+      )}
+
+      {user && <Box sx={{ height: '48px' }} />}
+
       <Routes>
         <Route
           path="/"
@@ -140,7 +157,7 @@ function App() {
           path="/detail/:date/:shipId"
           element={
             <ProtectedRoute user={user}>
-              <DetailPage />
+              <DetailPage user={user} />
             </ProtectedRoute>
           }
         />
@@ -151,7 +168,12 @@ function App() {
         onClose={() => setShowWelcomeDialog(false)}
         userName={user?.name}
       />
-    </MainWrapper>
+      <NavigationDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSignOut={handleLogout}
+      />
+    </Box>
   );
 }
 
